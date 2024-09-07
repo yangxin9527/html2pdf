@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate PDF</title>
+    <style>
+      input {
+        width: 300px;
+        height: 36px;
+      }
+      button {
+        width: 100px;
+        height: 42px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      网址：<input
+        type="text"
+        id="input"
+        placeholder="默认：http://localhost:3000/pdf-demo.html"
+      />
+      <button id="generate-pdf">生成PDF</button>
+      <h2>测试网址：</h2>
+      <ul>
+        <li>http://localhost:3000/pdf-demo.html</li>
+        <li>taobao.com</li>
+      </ul>
+    </div>
+
+    <script>
+      document
+        .getElementById('generate-pdf')
+        .addEventListener('click', async () => {
+          try {
+            // 发起请求获取生成的 PDF 文件
+            function ensureProtocol(url) {
+              // 检查 URL 是否以 'http://' 或 'https://' 开头
+              if (!/^https?:\/\//i.test(url)) {
+                // 如果没有，就添加 'http://' 前缀
+                return 'http://' + url;
+              }
+              return url;
+            }
+            let inputValue = ensureProtocol(
+              document.querySelector('#input').value ||
+                'http://localhost:3000/pdf-demo.html',
+            );
+
+            document.querySelector('#input').value = inputValue;
+            const response = await fetch('/pdf/generate', {
+              method: 'POST',
+
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                url: inputValue,
+                cookies: document.cookie,
+              }),
+            });
+            const blob = await response.blob();
+
+            // 创建一个下载链接
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          } catch (error) {
+            console.error('Error generating PDF:', error);
+          }
+        });
+    </script>
+  </body>
+</html>
